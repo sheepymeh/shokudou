@@ -1,0 +1,5 @@
+flask==2.0.0
+flask_executor==0.9.4
+flask_sqlalchemy==2.5.1
+pandas==1.2.4
+numpy==1.20.3
