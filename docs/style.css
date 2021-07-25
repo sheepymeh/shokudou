@@ -20,6 +20,9 @@ a {
 	color: #93291E;
 }
 img {
+	vertical-align: middle;
+}
+.large-img {
 	display: block;
 	width: 100%;
 	margin: 6px 0;
@@ -52,6 +55,13 @@ img {
 	text-decoration: none;
 	display: block;
 	margin-bottom: 8px;
+}
+#count-refresh {
+	text-transform: uppercase;
+	font-size: .875rem;
+	font-weight: 600;
+	margin-top: 12px;
+	cursor: pointer;
 }
 
 #small-chart-container {

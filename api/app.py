@@ -10,7 +10,7 @@ from model import model
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{config.DB_NAME}.db'
 app.config['EXECUTOR_PROPAGATE_EXCEPTIONS'] = True
 db = SQLAlchemy(app)
 executor = Executor(app)
@@ -80,9 +80,6 @@ def update_db(buffer):
 					QueueStatus.hour == hour,
 					QueueStatus.minute == minute,
 				).first()
-				print(f'{str(hour)}:{str(minute)}')
-				print(data)
-				print()
 
 				tmp.append(data[0])
 		graph_data = tmp
@@ -112,9 +109,6 @@ def index():
 
 	# scans were not complete in the previous minute
 	if content['timestamp'] - 60 > current_tick:
-		print('[LOG] Missing data')
-		print(buffer)
-		print()
 		buffer = {}
 		update_tick()
 
@@ -130,10 +124,6 @@ def index():
 def get_current():
 	return jsonify({
 		'success': True,
-		# 'data': {
-		# 	**current,
-		# 	'speed': config.SPEED
-		# },
 		'data': current,
 	})
 

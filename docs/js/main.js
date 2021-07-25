@@ -49,6 +49,7 @@ async function updateContent() {
 	drawSmallChart(resChart.data);
 }
 updateContent();
+document.getElementById('count-refresh').addEventListener('click', updateContent);
 
 function newCard(title, value) {
 	const card = document.createElement('div');
@@ -78,16 +79,12 @@ async function totalChart() {
 	drawBigChart(res.data);
 
 	const d = new Date();
-	let offset = 0;
-	if (d.getHours() > 13 && d.getMinutes() > 30) {
-		const offset = 0;
-	}
-	else {
+	if (!(d.getHours() > 13 && d.getMinutes() > 30)) {
 		const offset = Math.max(0, (d.getHours() * 12 - 114) + Math.ceil(d.getMinutes() / 5));
 		if (offset > res.data.length) offset = 0;
 		let bestTime = offset;
 		for (let i = offset; i < res.data.length; i++) {
-			if (res.data[i] < res.data[bestTime]) bestTime = i
+			if (res.data[i] < res.data[bestTime]) bestTime = i;
 		}
 	}
 
