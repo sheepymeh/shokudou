@@ -63,6 +63,11 @@ img {
 	margin-top: 12px;
 	cursor: pointer;
 }
+#count-refresh.disabled {
+	pointer-events: none;
+	cursor: default;
+	opacity: 0.8;
+}
 
 #small-chart-container {
 	position: absolute;

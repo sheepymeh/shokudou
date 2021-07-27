@@ -49,7 +49,13 @@ async function updateContent() {
 	drawSmallChart(resChart.data);
 }
 updateContent();
-document.getElementById('count-refresh').addEventListener('click', updateContent);
+document.getElementById('count-refresh').addEventListener('click', async () => {
+	document.getElementById('count-refresh').classList.add('disabled');
+	document.getElementById('count-refresh').innerText = 'Refreshing';
+	await updateContent();
+	document.getElementById('count-refresh').classList.remove('disabled');
+	document.getElementById('count-refresh').innerText = 'Refresh';
+);
 
 function newCard(title, value) {
 	const card = document.createElement('div');
