@@ -7,9 +7,9 @@ import ubluetooth
 import gc
 from network import WLAN, STA_IF
 from ujson import dumps
-from urequests import post
+from urequests import get, post
 from ubinascii import hexlify
-from utime import time, sleep_ms
+from utime import time, gmtime, sleep_ms
 from ble_advertising import decode_services
 
 _IRQ_SCAN_RESULT = micropython.const(5)
@@ -110,16 +110,9 @@ def connect_wlan(set_time=False, clear_rtc_ram=False):
 
 	# Set time on boot and after every half hour
 	if time() % 1800 < 85 or set_time:
-		from ntptime import settime
-		while True:
-			try:
-				log('Setting time')
-				settime()
-			except:
-				sleep_ms(500)
-				continue
-			break
-		del settime
+		epoch = get('http://{}/time'.format(config.API_URL)).text
+		tm = gmtime(epoch - 946684800)
+		rtc.datetime((tm[0], tm[1], tm[2], tm[6] + 1, tm[3], tm[4], tm[5], 0))
 	if config.DEBUG:
 		t = rtc.datetime()
 		log('Time is {}/{}/{} {}:{}:{}'.format(t[0], t[1], t[2], t[4], t[5], t[6]))
@@ -129,7 +122,7 @@ def connect_wlan(set_time=False, clear_rtc_ram=False):
 def upload(mac):
 	battery = round(BAT.percentage(), 3)
 	post(
-		config.API_URL,
+		'http://{}/update'.format(config.API_URL),
 		headers={
 			'content-type': 'application/json'
 		},
@@ -198,18 +191,16 @@ def bt_irq(event, data):
 			np[0] = (7, 0, 0)
 			np.write()
 			machine.deepsleep()
-		# Sleep after 1:30PM until 8:30AM (to allow RTC to synchronize)
-		elif time() % 86400 >= 19800 and not config.DEBUG:
-			machine.deepsleep((88200 - time() % 86400) * 1000)
+		elif time() % 86400 >= (config.SLEEP - int(config.TZ)) * 3600 and not config.DEBUG:
+			machine.deepsleep(((86400 + (config.WAKE - 1 - int(config.TZ)) * 3600) - time() % 86400) * 1000)
 		machine.deepsleep(round(((75 - round(time())) % 60) * 1000))
 	machine.idle()
 
 if time() < 631152000:
 	connect_wlan(True)
-# Sleep until 9:30AM
-if time() % 86400 <= 5400 and not config.DEBUG:
+if time() % 86400 <= (config.WAKE - int(config.TZ)) * 3600 and not config.DEBUG:
 	connect_wlan(True, True)
-	machine.deepsleep((5400 - time() % 86400) * 1000)
+	machine.deepsleep(((config.WAKE - int(config.TZ)) * 3600 - time() % 86400) * 1000)
 wlan.active(False)
 
 bt = ubluetooth.BLE()

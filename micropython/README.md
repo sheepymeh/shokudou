@@ -8,8 +8,11 @@ DEBUG = True
 WIFI_SSID = '<WiFi SSID>'
 WIFI_USER = '<WPA2 Enterprise Username> (if not using WPA/WPA2 Personal)'
 WIFI_PASS = '<WiFi Password>'
-API_URL = 'http://<API URL>/update'
+API_URL = '<API Hostname/IP>'
 SECRET = '<API Secret>'
+TZ = '<Timezone like +8>'
+WAKE = '<Seconds into day>'
+SLEEP = '<Seconds into day>'
 ```
 
 ``urequests`` is installed using ``upip`` on first boot automatically.

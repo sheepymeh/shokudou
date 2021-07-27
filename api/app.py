@@ -100,7 +100,6 @@ def index():
 			'success': False,
 			'error': 'Malformed POST body'
 		}), 400
-		# do additional validation with a proper lib
 	if content['secret'] != config.SECRET:
 		return jsonify({
 			'success': False,
@@ -133,3 +132,7 @@ def graph():
 		'success': True,
 		'data': graph_data
 	})
+
+@app.route('/time', methods=['GET'])
+def gettime():
+	return round(datetime.now().timestamp())
