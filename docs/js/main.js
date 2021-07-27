@@ -55,7 +55,7 @@ document.getElementById('count-refresh').addEventListener('click', async () => {
 	await updateContent();
 	document.getElementById('count-refresh').classList.remove('disabled');
 	document.getElementById('count-refresh').innerText = 'Refresh';
-);
+});
 
 function newCard(title, value) {
 	const card = document.createElement('div');
