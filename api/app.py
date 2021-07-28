@@ -135,4 +135,4 @@ def graph():
 
 @app.route('/time', methods=['GET'])
 def gettime():
-	return round(datetime.now().timestamp())
+	return str(round(datetime.now().timestamp()))
