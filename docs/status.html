@@ -6,20 +6,25 @@
 	<link rel='preconnect' href='https://fonts.gstatic.com'>
 	<link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap' rel='stylesheet'> 
 	<link href='style.css' rel='stylesheet'>
+	<style>
+		td:nth-of-type(2)::after {
+			content: ' Status';
+			font-size: .9rem;
+			margin-left: 3px;
+		}
+		td:nth-of-type(3)::after {
+			content: ' Battery';
+			font-size: .9rem;
+			margin-left: 3px;
+		}
+	</style>
 	<link rel='manifest' href='manifest.json'>
-	<title>Shokudou</title>
+	<title>Shokudou - Status</title>
 </head>
 <body>
 	<main>
 		<section id='hero'>
-			<div>
-				<h1 id='count-total'>--</h1>
-				people in the canteen
-			</div>
-			<div id='count-refresh'><img src='images/refresh.svg' height=20> <span id='count-refresh-text'>Refresh</span></div>
-		</section>
-		<section id='small-chart-container'>
-			<canvas id='small-chart' width='101' height='101'></canvas>
+			<h1>Status</h1>
 		</section>
 		<section>
 			<table id='list'>
@@ -27,17 +32,11 @@
 			</table>
 		</section>
 	</main>
-	<article>
-		<div id='big-chart-container'>
-			<canvas id='big-chart'></canvas>
-		</div>
-	</article>
 	<footer>
 		<a href='about.html'>About</a>
 		<a href='privacy.html'>Privacy</a>
 	</footer>
 	<script src='https://cdn.jsdelivr.net/npm/chart.js@3.2.1/dist/chart.min.js' defer></script>
-	<script src='js/drawChart.js' defer></script>
-	<script src='js/main.js' defer></script>
+	<script src='js/status.js' defer></script>
 </body>
 </html>

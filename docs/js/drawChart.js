@@ -19,14 +19,14 @@ for (let hour = 9; hour < 14; hour++) {
 		timeLabels.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
 }
 
-function drawSmallChart(data) {
+function drawSmallChart() {
+// function drawSmallChart(data) {
 	const ctx = document.getElementById('small-chart').getContext('2d');
-	new Chart(ctx, {
+	return new Chart(ctx, {
 		type: 'line',
 		data: {
 			labels: timeLabels,
 			datasets: [{
-				data: data,
 				backgroundColor: 'rgba(255, 99, 132, 0.2)',
 				fill: true,
 				tension: .3,

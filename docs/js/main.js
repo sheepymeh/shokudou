@@ -14,6 +14,7 @@ const stallList = document.getElementById('list');
 const slideover = document.getElementsByTagName('article')[0];
 
 Chart.defaults.font.family = 'Inter, sans-serif';
+let smallChart = drawSmallChart();
 
 function removeAllChildNodes(parent) {
 	while (parent.firstChild) parent.removeChild(parent.firstChild);
@@ -33,28 +34,31 @@ async function updateContent() {
 	CONFIG.stallNames.forEach((stall, idx) => {
 		const row = stallList.insertRow();
 
-		const nameRow = row.insertCell()
-		nameRow.appendChild(document.createTextNode(stall));
+		const nameCell = row.insertCell();
+		nameCell.appendChild(document.createTextNode(stall));
 
-		const dataRow = row.insertCell()
-		dataRow.appendChild(document.createTextNode(resCurrent.data[`stall${idx + 1}`]));
+		const dataCell = row.insertCell();
+		dataCell.appendChild(document.createTextNode(resCurrent.data[`stall${idx + 1}`] ? resCurrent.data[`stall${idx + 1}`] : '-'));
 
-		// const timeRow = row.insertCell()
-		// timeRow.appendChild(document.createTextNode(resCurrent.data[`stall${idx + 1}`] * resCurrent.data.speed[`stall${idx + 1}`]));
+		// const timeCell = row.insertCell();
+		// timeCell.appendChild(document.createTextNode(resCurrent.data[`stall${idx + 1}`] * resCurrent.data.speed[`stall${idx + 1}`]));
 	});
 
 	
 	const reqChart = await fetch(`${CONFIG.api}/graph`);
 	const resChart = await reqChart.json();
-	drawSmallChart(resChart.data);
+	smallChart.data.datasets[0].data = resChart.data;
+	smallChart.update();
 }
 updateContent();
-document.getElementById('count-refresh').addEventListener('click', async () => {
-	document.getElementById('count-refresh').classList.add('disabled');
-	document.getElementById('count-refresh').innerText = 'Refreshing';
+const refreshButton = document.getElementById('count-refresh');
+const refreshText = document.getElementById('count-refresh-text');
+refreshButton.addEventListener('click', async () => {
+	refreshButton.classList.add('disabled');
+	refreshText.innerText = 'Refreshing';
 	await updateContent();
-	document.getElementById('count-refresh').classList.remove('disabled');
-	document.getElementById('count-refresh').innerText = 'Refresh';
+	refreshButton.classList.remove('disabled');
+	refreshText.innerText = 'Refresh';
 });
 
 function newCard(title, value) {

@@ -4,6 +4,7 @@ from flask_executor import Executor
 
 # remember to set the server timezone
 from datetime import datetime
+from copy import deepcopy
 
 import config
 from model import model
@@ -18,6 +19,8 @@ executor = Executor(app)
 buffer = {}
 current = {}
 graph_data = []
+online_data = []
+battery_data = {}
 current_tick = 0
 
 class QueueStatus(db.Model):
@@ -33,7 +36,7 @@ class QueueStatus(db.Model):
 	def __repr__(self):
 		return '<QueueStatus %r>' % self.id
 for col in [f'stall{str(i)}' for i in range(1, config.NUM_STALLS + 1)]:
-	setattr(QueueStatus, col, db.Column(db.Integer, nullable=False))
+	setattr(QueueStatus, col, db.Column(db.Integer))
 
 def update_tick():
 	global current_tick
@@ -43,12 +46,13 @@ update_tick()
 
 @executor.job
 def update_db(buffer):
-	global current, graph_data
+	global current, graph_data, online_data
+	online_data = list(buffer.keys())
 
 	# do our machine learning magics here with df
 	preds = model(buffer)
-	current = {f'stall{str(i)}': preds[i - 1] for i in range(1, config.NUM_STALLS + 1)}
-	current['total'] = sum(preds)
+	current = {f'stall{str(i)}': preds[i - 1] for i in range(1, len(preds)+1)}
+	current['total'] = sum(preds) if len(preds) == config.NUM_DETECTORS else round(config.NUM_DETECTORS / len(preds) * sum(preds))
 
 	dt_object = datetime.now()
 	db.session.add(QueueStatus(
@@ -107,14 +111,20 @@ def index():
 		}), 403
 
 	# scans were not complete in the previous minute
-	if content['timestamp'] - 60 > current_tick:
+	if content['timestamp'] - 60 > current_tick and current and buffer:
+		update_db.submit(deepcopy(buffer))
 		buffer = {}
-		update_tick()
 
+	in_buffer = content['mac'] in buffer
 	buffer[content['mac']] = content['devices']
+	battery_data[content['mac']] = content['battery']
+
+	if in_buffer and not current:
+		update_db.submit(deepcopy(buffer))
+		buffer = {}
 
 	if len(buffer) == config.NUM_DETECTORS:
-		update_db.submit(buffer)
+		update_db.submit(deepcopy(buffer))
 		buffer = {}
 
 	return jsonify({'success': True})
@@ -131,6 +141,14 @@ def graph():
 	return jsonify({
 		'success': True,
 		'data': graph_data
+	})
+
+@app.route('/status', methods=['GET'])
+def status():
+	return jsonify({
+		'success': True,
+		'battery': battery_data,
+		'online': online_data
 	})
 
 @app.route('/time', methods=['GET'])
