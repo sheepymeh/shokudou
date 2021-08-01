@@ -88,6 +88,20 @@ async function totalChart() {
 	const res = await req.json();
 	drawBigChart(res.data);
 
+	const close = document.createElement('div');
+	close.appendChild(document.createTextNode('✖'));
+	close.id = 'close';
+	close.addEventListener('click', () => {
+		document.getElementById('small-chart-container').classList.remove('open');
+		document.getElementById('small-chart-container').classList.remove('hide');
+		document.getElementsByTagName('article')[0].classList.add('slideout');
+		setTimeout(() => {
+			document.body.classList.remove('show');
+			document.getElementsByTagName('article')[0].classList.remove('slideout');
+		}, 200);
+	});
+	document.getElementsByTagName('article')[0].appendChild(close);
+
 	const d = new Date();
 	if (!(d.getHours() > 13 && d.getMinutes() > 30)) {
 		const offset = Math.max(0, (d.getHours() * 12 - 114) + Math.ceil(d.getMinutes() / 5));
@@ -103,19 +117,5 @@ async function totalChart() {
 	document.getElementsByTagName('article')[0].appendChild(timeHeader);
 
 	document.getElementsByTagName('article')[0].appendChild(newCard('Best time for lunch', timeLabels[bestTime]));
-
-	const close = document.createElement('div');
-	close.appendChild(document.createTextNode('✖'));
-	close.id = 'close';
-	close.addEventListener('click', () => {
-		document.getElementById('small-chart-container').classList.remove('open');
-		document.getElementById('small-chart-container').classList.remove('hide');
-		document.getElementsByTagName('article')[0].classList.add('slideout');
-		setTimeout(() => {
-			document.body.classList.remove('show');
-			document.getElementsByTagName('article')[0].classList.remove('slideout');
-		}, 200);
-	});
-	document.getElementsByTagName('article')[0].appendChild(close);
 }
 document.getElementById('small-chart-container').addEventListener('click', totalChart);
