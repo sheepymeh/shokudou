@@ -128,7 +128,7 @@ def upload(mac):
 			'content-type': 'application/json'
 		},
 		data=dumps({
-			'devices': {hexlify(key).decode('utf-8')[22:]: data[0] // data[1] for (key, data) in devices.items()},
+			'devices': {hexlify(key).decode('utf-8')[22:30]: data[0] // data[1] for (key, data) in devices.items()},
 			'mac': mac,
 			'battery': battery,
 			'timestamp': time() + 946684800,
@@ -200,7 +200,6 @@ def bt_irq(event, data):
 if time() < 631152000:
 	connect_wlan(True)
 if time() % 86400 <= (config.WAKE - int(config.TZ) * 3600) and not config.DEBUG:
-	print('Condition 1')
 	connect_wlan(True, True)
 	machine.deepsleep(((config.WAKE - int(config.TZ) * 3600) - time() % 86400) * 1000)
 wlan.active(False)

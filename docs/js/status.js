@@ -19,6 +19,6 @@ const CONFIG = {
 		statusCell.innerHTML = data.online.includes(mac) ? '&#x1F7E2;' : '&#x1F534;';
 
 		const batteryCell = row.insertCell();
-		batteryCell.appendChild(document.createTextNode(`${data.battery[mac].toFixed(3) * 100}%`));
+		batteryCell.appendChild(document.createTextNode(`${Math.round(data.battery[mac] * 100)}%`));
 	}
 })();

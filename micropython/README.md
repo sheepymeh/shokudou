@@ -14,6 +14,7 @@ TZ = '<Timezone like +8>'
 WAKE = '<Seconds into day>'
 SLEEP = '<Seconds into day>'
 ```
+_Note that WAKE must be at least one hour after the timezone offset currently_
 
 ``urequests`` is installed using ``upip`` on first boot automatically.
 

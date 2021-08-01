@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_executor import Executor
+
+import time
+import atexit
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # remember to set the server timezone
 from datetime import datetime
@@ -12,16 +15,15 @@ from model import model
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{config.DB_NAME}.db'
-app.config['EXECUTOR_PROPAGATE_EXCEPTIONS'] = True
 db = SQLAlchemy(app)
-executor = Executor(app)
+
+s = BackgroundScheduler()
 
 buffer = {}
 current = {}
 graph_data = []
 online_data = []
 battery_data = {}
-current_tick = 0
 
 class QueueStatus(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -38,19 +40,17 @@ class QueueStatus(db.Model):
 for col in [f'stall{str(i)}' for i in range(1, config.NUM_STALLS + 1)]:
 	setattr(QueueStatus, col, db.Column(db.Integer))
 
-def update_tick():
-	global current_tick
-	current_tick = round(datetime.now().timestamp())
-	current_tick = current_tick - current_tick % 60 + 15
-update_tick()
+def update_db():
+	global buffer, current, graph_data, online_data
+	if not buffer:
+		return
 
-@executor.job
-def update_db(buffer):
-	global current, graph_data, online_data
-	online_data = list(buffer.keys())
+	buffer_copy = deepcopy(buffer)
+	buffer = {}
+	online_data = list(buffer_copy.keys())
 
 	# do our machine learning magics here with df
-	preds = model(buffer)
+	preds = model(buffer_copy)
 	current = {f'stall{str(i)}': preds[i - 1] for i in range(1, len(preds)+1)}
 	current['total'] = sum(preds) if len(preds) == config.NUM_DETECTORS else round(config.NUM_DETECTORS / len(preds) * sum(preds))
 
@@ -64,11 +64,6 @@ def update_db(buffer):
 		minute=dt_object.minute,
 		**current
 	))
-	# db.session.delete(QueueStatus.query.filter(
-	# 	QueueStatus.dow == dt_object.weekday(),
-	# 	QueueStatus.hour == dt_object.hour,
-	# 	QueueStatus.minute == dt_object.minute
-	# ).first())
 	db.session.commit()
 
 	if dt_object.minute % 5 == 0:
@@ -87,8 +82,6 @@ def update_db(buffer):
 
 				tmp.append(data[0])
 		graph_data = tmp
-	update_tick()
-	return True
 
 @app.route('/update', methods=['POST'])
 def index():
@@ -110,22 +103,8 @@ def index():
 			'error': 'Invalid secret'
 		}), 403
 
-	# scans were not complete in the previous minute
-	if content['timestamp'] - 60 > current_tick and current and buffer:
-		update_db.submit(deepcopy(buffer))
-		buffer = {}
-
-	in_buffer = content['mac'] in buffer
 	buffer[content['mac']] = content['devices']
 	battery_data[content['mac']] = content['battery']
-
-	if in_buffer and not current:
-		update_db.submit(deepcopy(buffer))
-		buffer = {}
-
-	if len(buffer) == config.NUM_DETECTORS:
-		update_db.submit(deepcopy(buffer))
-		buffer = {}
 
 	return jsonify({'success': True})
 
@@ -153,4 +132,7 @@ def status():
 
 @app.route('/time', methods=['GET'])
 def gettime():
-	return str(round(datetime.now().timestamp()))
+	return str(int(time.time()))
+
+s.add_job(func=update_db, trigger="cron", second=10)
+s.start()
