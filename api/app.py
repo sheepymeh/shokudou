@@ -52,7 +52,7 @@ def update_db():
 	# do our machine learning magics here with df
 	preds = model(buffer_copy)
 	current = {f'stall{str(i)}': preds[i - 1] for i in range(1, len(preds)+1)}
-	current['total'] = sum(preds) if len(preds) == config.NUM_DETECTORS else round(config.NUM_DETECTORS / len(preds) * sum(preds))
+	current['total'] = sum(preds) if len(preds) == config.NUM_DETECTORS else round(.9 * config.NUM_DETECTORS / len(preds) * sum(preds))
 
 	dt_object = datetime.now()
 	db.session.add(QueueStatus(
@@ -75,7 +75,7 @@ def update_db():
 				if hour == 13 and minute > 30: continue
 
 				data = QueueStatus.query.with_entities(db.func.avg(QueueStatus.total).label('total')).filter(
-					QueueStatus.dow == dt_object.weekday(),
+					QueueStatus.dow == dt_object.weekday() + 1 if hour == 13 and minute > 30 else dt_object.weekday(),
 					QueueStatus.hour == hour,
 					QueueStatus.minute == minute,
 				).first()

@@ -20,7 +20,6 @@ for (let hour = 9; hour < 14; hour++) {
 }
 
 function drawSmallChart() {
-// function drawSmallChart(data) {
 	const ctx = document.getElementById('small-chart').getContext('2d');
 	return new Chart(ctx, {
 		type: 'line',
@@ -63,14 +62,13 @@ function drawSmallChart() {
 	});
 }
 
-function drawBigChart(data) {
+function drawBigChart() {
 	const ctx = document.getElementById('big-chart').getContext('2d');
-	new Chart(ctx, {
+	return new Chart(ctx, {
 		type: 'line',
 		data: {
 			labels: timeLabels,
 			datasets: [{
-				data: data,
 				backgroundColor: context => {
 					const chart = context.chart;
 					const {ctx, chartArea} = chart;
@@ -92,7 +90,7 @@ function drawBigChart(data) {
 						minRotation: -90,
 						mirror: true,
 						font: {
-							size: 16
+							size: 17
 						},
 						color: '#ddd',
 						z: 1
@@ -110,7 +108,7 @@ function drawBigChart(data) {
 			},
 			display: false,
 			elements: {
-				point:{
+				point: {
 					radius: 0
 				}
 			},
@@ -122,7 +120,11 @@ function drawBigChart(data) {
 			maintainAspectRatio: false,
 			animation: {
 				duration: 0,
-				onComplete: () => document.getElementById('big-chart-container').style.opacity = 1
+			},
+			layout: {
+				padding: {
+					top: 10,
+				}
 			},
 		}
 	});

@@ -15,6 +15,7 @@ const slideover = document.getElementsByTagName('article')[0];
 
 Chart.defaults.font.family = 'Inter, sans-serif';
 let smallChart = drawSmallChart();
+let bigChart = drawBigChart();
 
 function removeAllChildNodes(parent) {
 	while (parent.firstChild) parent.removeChild(parent.firstChild);
@@ -38,7 +39,7 @@ async function updateContent() {
 		nameCell.appendChild(document.createTextNode(stall));
 
 		const dataCell = row.insertCell();
-		dataCell.appendChild(document.createTextNode(resCurrent.data[`stall${idx + 1}`] ? resCurrent.data[`stall${idx + 1}`] : '-'));
+		dataCell.appendChild(document.createTextNode(resCurrent.data[`stall${idx + 1}`] !== undefined ? resCurrent.data[`stall${idx + 1}`] : '-'));
 
 		// const timeCell = row.insertCell();
 		// timeCell.appendChild(document.createTextNode(resCurrent.data[`stall${idx + 1}`] * resCurrent.data.speed[`stall${idx + 1}`]));
@@ -86,7 +87,8 @@ async function totalChart() {
 
 	const req = await fetch(`${CONFIG.api}/graph`);
 	const res = await req.json();
-	drawBigChart(res.data);
+	bigChart.data.datasets[0].data = res.data;
+	bigChart.update();
 
 	const close = document.createElement('div');
 	close.appendChild(document.createTextNode('✖'));
@@ -101,21 +103,20 @@ async function totalChart() {
 		}, 200);
 	});
 	document.getElementsByTagName('article')[0].appendChild(close);
+	for (const heading of document.getElementsByTagName('h2')) heading.parentElement.removeChild(heading);
+	for (const card of document.getElementsByClassName('card')) card.parentElement.removeChild(card);
 
 	const d = new Date();
-	if (!(d.getHours() > 13 && d.getMinutes() > 30)) {
-		const offset = Math.max(0, (d.getHours() * 12 - 114) + Math.ceil(d.getMinutes() / 5));
-		if (offset > res.data.length) offset = 0;
-		let bestTime = offset;
-		for (let i = offset; i < res.data.length; i++) {
-			if (res.data[i] < res.data[bestTime]) bestTime = i;
-		}
-	}
-
 	const timeHeader = document.createElement('h2');
-	timeHeader.appendChild(document.createTextNode(`Today's Crowd Data`));
+	timeHeader.appendChild(document.createTextNode(`${(d.getHours() == 13 && d.getMinutes() > 30 || d.getHours() > 13) ? "Tomorrow" : "Today"}'s Crowd Data`));
 	document.getElementsByTagName('article')[0].appendChild(timeHeader);
 
+	let offset = Math.max(0, (d.getHours() * 12 - 114) + Math.ceil(d.getMinutes() / 5));
+	if (offset > res.data.length) offset = 0;
+	let bestTime = offset;
+	for (let i = offset; i < res.data.length; i++) {
+		if (res.data[i] < res.data[bestTime]) bestTime = i;
+	}
 	document.getElementsByTagName('article')[0].appendChild(newCard('Best time for lunch', timeLabels[bestTime]));
 }
 document.getElementById('small-chart-container').addEventListener('click', totalChart);
