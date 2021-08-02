@@ -42,29 +42,29 @@ for col in [f'stall{str(i)}' for i in range(1, config.NUM_STALLS + 1)]:
 
 def update_db():
 	global buffer, current, graph_data, online_data
-	if not buffer:
-		return
-
-	buffer_copy = deepcopy(buffer)
-	buffer = {}
-	online_data = list(buffer_copy.keys())
-
-	# do our machine learning magics here with df
-	preds = model(buffer_copy)
-	current = {f'stall{str(i)}': preds[i - 1] for i in range(1, len(preds)+1)}
-	current['total'] = sum(preds) if len(preds) == config.NUM_DETECTORS else round(.9 * config.NUM_DETECTORS / len(preds) * sum(preds))
-
 	dt_object = datetime.now()
-	db.session.add(QueueStatus(
-		day=dt_object.day,
-		month=dt_object.month,
-		year=dt_object.year,
-		dow=dt_object.weekday(),
-		hour=dt_object.hour,
-		minute=dt_object.minute,
-		**current
-	))
-	db.session.commit()
+	if buffer:
+		buffer_copy = deepcopy(buffer)
+		buffer = {}
+		online_data = list(buffer_copy.keys())
+
+		# do our machine learning magics here with df
+		preds = model(buffer_copy)
+		current = {f'stall{str(i)}': preds[i - 1] for i in range(1, len(preds)+1)}
+		current['total'] = sum(preds) if len(preds) == config.NUM_DETECTORS else round(.9 * config.NUM_DETECTORS / len(preds) * sum(preds))
+
+		db.session.add(QueueStatus(
+			day=dt_object.day,
+			month=dt_object.month,
+			year=dt_object.year,
+			dow=dt_object.weekday(),
+			hour=dt_object.hour,
+			minute=dt_object.minute,
+			**current
+		))
+		db.session.commit()
+	else:
+		online_data = []
 
 	if dt_object.minute % 5 == 0:
 		graph_data = []
@@ -75,7 +75,7 @@ def update_db():
 				if hour == 13 and minute > 30: continue
 
 				data = QueueStatus.query.with_entities(db.func.avg(QueueStatus.total).label('total')).filter(
-					QueueStatus.dow == dt_object.weekday() + 1 if hour == 13 and minute > 30 else dt_object.weekday(),
+					QueueStatus.dow == dt_object.weekday() + 1 if dt_object.hour == 13 and dt_object.minute > 30 or dt_object.hour > 13 else dt_object.weekday(),
 					QueueStatus.hour == hour,
 					QueueStatus.minute == minute,
 				).first()
